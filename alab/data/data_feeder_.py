@@ -82,7 +82,7 @@ class NumpyDataFeeder(DataFeeder):
 
 
 # class Feeder:
-#     def __init__(self, schema):
+#     conf __init__(self, schema):
 #         self.schema = schema
 #         if schema is None or len(self.schema) == 0:
 #             self.schema = {'*': np.inf}
@@ -92,21 +92,21 @@ class NumpyDataFeeder(DataFeeder):
 #
 #         return
 #
-#     def feed(self):
+#     conf feed(self):
 #         raise UnimplementedMethodError()
 #
-#     def rewind(self):
+#     conf rewind(self):
 #         self.row_index = 0
 #
 #
 # class BatchFeeder(Feeder):
-#     def __init__(self, feeder: Feeder, fetch_size):
+#     conf __init__(self, feeder: Feeder, fetch_size):
 #         Feeder.__init__(self, None)
 #         self.feeder = feeder
 #         self.fetch_size = fetch_size
 #         return
 #
-#     def feed(self):
+#     conf feed(self):
 #         results = {}
 #         for i in range(self.fetch_size):
 #             row = self.feeder.feed()
@@ -130,13 +130,13 @@ class NumpyDataFeeder(DataFeeder):
 #
 #
 # class NumpyFeeder(Feeder):
-#     def __init__(self, array: np.ndarray, schema=None):
+#     conf __init__(self, array: np.ndarray, schema=None):
 #         Feeder.__init__(self, schema)
 #         self.array = array
 #         self.max_index = array.shape[0]
 #         return
 #
-#     def feed(self):
+#     conf feed(self):
 #         results = {}
 #         for var in self.schema:
 #             if self.row_index < self.max_index:
@@ -152,20 +152,20 @@ class NumpyDataFeeder(DataFeeder):
 #
 #
 # class HiveFeeder(Feeder):
-#     def __init__(self, query: str, fetch_size=10000, schema=None):
+#     conf __init__(self, query: str, fetch_size=10000, schema=None):
 #         self.fetch_size = fetch_size
 #         return
 #
-#     def feed(self):
+#     conf feed(self):
 #         return
 #
 #
 # class FileFeeder(Feeder):
-#     def __init__(self, filename: str, fetch_size=10000, schema=None):
+#     conf __init__(self, filename: str, fetch_size=10000, schema=None):
 #         self.fetch_size = fetch_size
 #         return
 #
-#     def feed(self):
+#     conf feed(self):
 #         return
 
 

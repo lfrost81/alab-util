@@ -6,7 +6,7 @@ import tensorflow as tf
 
 
 class NNEstimator:
-    def __init__(self, verbosity=1):
+    def __init__(self, verbosity=0):
         self.verbosity = verbosity
 
         self.y_hat = None
@@ -38,42 +38,16 @@ class NNEstimator:
 
 
 class DNNEstimator(NNEstimator):
-    def __init__(self, hidden_layers=[], epoch=500, learning_rate=0.01, initializer='xavier',
-                 activate_func='relu', cost_func='cross_entropy', softmax=False, l2reg_lambda=0,
-                 dropouts=[], optimizer='adam', verbosity=1):
-
+    def __init__(self, conf: dict, verbosity=0):
         NNEstimator.__init__(self, verbosity=verbosity)
 
-        # Hyper Parameters
-        self.hidden_layers = hidden_layers
-        self.learning_rate = learning_rate
-        self.epoch = epoch
+        # Network configuration
+        self.conf = conf
 
-        # Selective functions
-        self.initializer = initializer
-        self.activate_func = activate_func
-        self.cost_func = cost_func
-        self.softmax = softmax
-        self.l2reg = l2reg_lambda
-        self.dropouts = dropouts
-        self.dropouts_size = len(dropouts)
-        if self.dropouts_size > 0:
-            if self.dropouts_size != len(self.hidden_layers):
-                raise
-            if max(self.dropouts) >= 1 and min(self.dropouts) <= 0:
-                raise
+        # Optimizer
+        self.optimizer = None
 
-        # Selective optimization
-        if optimizer == 'adam':
-            self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        elif optimizer == 'sgd':
-            self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate)
-        elif optimizer == 'adagrad':
-            self.optimizer = tf.train.AdagradOptimizer(learning_rate=self.learning_rate)
-        else:
-            raise
-
-        # Reusable variables
+        # Variables
         self.x_in = None
         self.y_in = None
         self.y_hat = None
@@ -83,13 +57,10 @@ class DNNEstimator(NNEstimator):
         self.train = None
         self.cost = None
 
-        # Options
-        self.verbosity = verbosity
-
     def draw_graph(self, xdim, ydim):
         dims = [xdim]
-        for dim in self.hidden_layers:
-            dims.append(dim)
+        for layer in self.conf['hidden_layers']:
+            dims.append(layer['dim'])
         dims.append(ydim)
 
         self.x_in = tf.placeholder(tf.float64, [None, xdim])
@@ -99,51 +70,65 @@ class DNNEstimator(NNEstimator):
         weights = []
         biases = []
         for i in np.arange(len(dims) - 1):
-            if self.initializer == 'xavier':
-                weights.append(tf.Variable(np.random.randn(dims[i], dims[i + 1]) / np.sqrt(dims[i])))
+            if self.conf['initializer'] == 'xavier':
+                weights.append(tf.Variable(np.random.randn(dims[i],
+                                                           dims[i + 1]) / np.sqrt(dims[i])))
             elif self.initializer == 'he':
-                weights.append(tf.Variable(np.random.randn(dims[i], dims[i + 1]) / np.sqrt(dims[i] / 2)))
-            elif self.initializer == 'uniform':
+                weights.append(tf.Variable(np.random.randn(dims[i],
+                                                           dims[i + 1]) / np.sqrt(dims[i] / 2)))
+            elif self.conf['initializer'] == 'uniform':
                 weights.append(tf.Variable(np.random.uniform(-1, 1, [dims[i], dims[i + 1]])))
             else:
                 raise
             biases.append(tf.Variable(np.random.normal(-1, 1, [dims[i + 1]])))
 
         # Set activate functions for the nodes at each layer
-        hiddens = [self.x_in]
-        for i in np.arange(len(self.hidden_layers)):
-            weighted_sum = tf.add(tf.matmul(hiddens[-1], weights[i]), biases[i])
-            if self.activate_func == 'relu':
+        hidden_layers = [self.x_in]
+        for i, layer in enumerate(self.conf['hidden_layers']):
+            weighted_sum = tf.add(tf.matmul(hidden_layers[-1], weights[i]), biases[i])
+            if layer['activate_func'] == 'relu':
                 node = tf.nn.relu(weighted_sum)
-            elif self.activate_func == 'tanh':
+            elif layer['activate_func'] == 'tanh':
                 node = tf.nn.tanh(weighted_sum)
-            elif self.activate_func == 'sigmoid':
+            elif layer['activate_func'] == 'sigmoid':
                 node = tf.nn.sigmoid(weighted_sum)
             else:
                 raise
 
             # Set dropouts
-            if self.dropouts_size > 0:
-                node = tf.nn.dropout(node, self.dropouts[i])
+            if 'dropout' in layer:
+                node = tf.nn.dropout(node, layer['dropout'])
 
-            hiddens.append(node)
+            hidden_layers.append(node)
 
         # Set output type and cost function for last layer
-        self.y_hat = tf.add(tf.matmul(hiddens[-1], weights[-1]), biases[-1])
-        if self.softmax:
+        self.y_hat = tf.add(tf.matmul(hidden_layers[-1], weights[-1]), biases[-1])
+        if self.conf['softmax']:
             self.y_hat = tf.nn.softmax(self.y_hat)
 
-        if self.cost_func == 'cross_entropy':
-            self.cost = tf.reduce_mean(-tf.reduce_sum(self.y_in * tf.log(self.y_hat), reduction_indices=[1]))
-        elif self.cost_func == 'mse':
+        if self.conf['cost_func'] == 'cross_entropy':
+            self.cost = tf.reduce_mean(-tf.reduce_sum(self.y_in * tf.log(self.y_hat),
+                                                      reduction_indices=[1]))
+        elif self.conf['cost_func'] == 'mse':
             self.cost = tf.reduce_mean(tf.square(self.y_in - self.y_hat))
         else:
             raise
 
         # Set L2 Regularization
-        if self.l2reg > 0:
+        if self.conf['l2reg_lambda'] > 0:
             for weight in weights:
                 self.cost += self.l2reg * tf.nn.l2_loss(weight)
+
+        # Selective optimization
+        learning_rate = self.conf['learning_rate']
+        if self.conf['optimizer'] == 'adam':
+            self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+        elif self.conf['optimizer'] == 'sgd':
+            self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+        elif self.conf['optimizer'] == 'adagrad':
+            self.optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
+        else:
+            raise
 
         # Set Optimizer
         self.train = self.optimizer.minimize(self.cost)
@@ -162,7 +147,7 @@ class DNNEstimator(NNEstimator):
             y = np.array(y)
 
         self.draw_graph(x.shape[1], y.shape[1])
-        for e in np.arange(self.epoch):
+        for e in np.arange(self.conf['epoch']):
             _, c = self.sess.run([self.train, self.cost], feed_dict={self.x_in: x, self.y_in: y})
             if self.verbosity > 0:
                 print('epoch: %s, cost: %s' % (e+1, c))
@@ -171,7 +156,7 @@ class DNNEstimator(NNEstimator):
         self.draw_graph(feeder.dim('x'), feeder.dim('y'))
         if self.verbosity > 0:
             print('epoch: %s, cost: %s' % (0, np.inf))
-        for e in np.arange(self.epoch):
+        for e in np.arange(self.conf['epoch']):
             while True:
                 x = feeder.feed('x')
                 if x is None:
@@ -188,3 +173,11 @@ class DNNEstimator(NNEstimator):
 
     def get_weights_and_biases(self):
         return self.sess.run([self.weights, self.biases])
+
+
+class CNNEstimator(NNEstimator):
+    def __init__(self, verbosity=0):
+
+        NNEstimator.__init__(self, verbosity=verbosity)
+
+

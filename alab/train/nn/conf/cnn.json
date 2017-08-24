@@ -1,0 +1,25 @@
+{
+  "epoch": 500,
+  "learning_rate": 0.01,
+  "cost_func": "cross_entropy",
+  "softmax": true,
+  "optimizer": "adam",
+  "l2reg_lambda": 0,
+  "initializer" : "xavier",
+  "hidden_layers": [
+    {
+      "type": "convolution",
+      "dim": 32,
+      "activate_func": "relu",
+      "stride": 1,
+      "padding": "same",
+      "dropout": 0.9
+    }, {
+      "type": "pooling",
+      "dim": 32,
+      "stride": 2,
+      "padding": "same",
+      "dropout": 0.9
+    }
+  ]
+}
