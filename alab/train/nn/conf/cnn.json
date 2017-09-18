@@ -20,6 +20,9 @@
       "stride": 2,
       "padding": "same",
       "dropout": 0.9
+    }, {
+      "type": "full",
+      "dim": 10
     }
   ]
 }
