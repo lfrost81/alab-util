@@ -2,7 +2,7 @@
   "es": {
     "ip": "52.78.96.74",
     "port": 9200,
-    "index": "ptag.201701",
+    "index": "ptag",
     "type": "",
     "behavior_tag_patterns": ["TicketSize", "건수", "횟수", "결제","여부", "통신비", "이용"],
     "tf_tags": ["Library방문여부"]
@@ -29,6 +29,39 @@
     "mappings": {
       "object": {
         "properties": {
+          "id": { "type": "text" },
+          "TMRate": { "type": "float" },
+          "ARS총인입횟수": { "type": "integer" },
+          "고객가구형태": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "단기카드대출한도금액": { "type": "long" },
+          "대형마트업종신판결제건수": { "type": "integer" },
+          "보험료TicketSize": { "type": "long" },
+          "신용정상카드수": { "type": "integer" },
+          "신용판매이용건수": { "type": "integer" },
+          "신판자동차제외이용금액": { "type": "long" },
+          "연령": { "type": "integer", "ignore_malformed": true },
+          "외식업종신판결제건수": { "type": "integer" },
+          "월통신비": { "type": "long" },
+          "주유업종이용금액": { "type": "long" },
+          "DummyTag0": { "type": "long" },
+          "DummyTag1": { "type": "long" },
+          "DummyTag2": { "type": "long" },
+          "DummyTag3": { "type": "long" },
+          "DummyTag4": { "type": "long" },
+          "DummyTag5": { "type": "long" },
+          "DummyTag6": { "type": "long" },
+          "DummyTag7": { "type": "long" },
+          "DummyTag8": { "type": "long" },
+          "DummyTag9": { "type": "long" },
+          "DummyTag10": { "type": "long" }
         }
       }
     }

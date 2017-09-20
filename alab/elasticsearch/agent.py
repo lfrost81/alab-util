@@ -21,7 +21,7 @@ def request(query, ip, port, index_name, type_name='', method='post', operation=
         if type(query) is dict:
             bytes_query = json.dumps(query)
         elif row_str_query:
-            bytes_query = query
+            bytes_query = bytes(query, encoding='utf-8')
         else:
             bytes_query = json.dumps(json.loads(query))
 
@@ -40,4 +40,5 @@ def request(query, ip, port, index_name, type_name='', method='post', operation=
             print(response.reason)
             raise
 
+    print(response.text)
     return response.text
