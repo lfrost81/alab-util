@@ -37,7 +37,8 @@ class ElasticIndexer:
             for i, line in enumerate(fp):
                 if not line:
                     break
-                meta_template['index']['_id'] = line['id']
+
+                meta_template['index']['_id'] = json.loads(line)['id']
 
                 tmp_list.append(json.dumps(meta_template))
                 tmp_list.append(line.replace('\n', ''))

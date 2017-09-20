@@ -60,7 +60,7 @@ class TagRandGenerator():
             if identifier % self.print_per == 0:
                 print('feed:', identifier)
 
-            result_dict['id'] = self.id_tag + 'id' + str(identifier)
+            result_dict['id'] = identifier
             result_dict['classType'] = self.id_tag
             result_dict['date'] = self.date
             self.input_queue.put(result_dict)
