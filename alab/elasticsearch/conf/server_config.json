@@ -1,0 +1,36 @@
+{
+  "es": {
+    "ip": "52.78.96.74",
+    "port": 9200,
+    "index": "ptag.201701",
+    "type": "",
+    "behavior_tag_patterns": ["TicketSize", "건수", "횟수", "결제","여부", "통신비", "이용"],
+    "tf_tags": ["Library방문여부"]
+  },
+  "kibana": {
+    "ip": "52.78.96.74",
+    "port": 5601
+  },
+  "association_query": {
+    "num_of_hashes": 256
+  },
+  "create_index_query": {
+    "settings": {
+      "index": {
+        "number_of_shards": 5,
+        "number_of_replicas": 1,
+        "mapping": {
+          "total_fields": {
+            "limit": 1000
+          }
+        }
+      }
+    },
+    "mappings": {
+      "object": {
+        "properties": {
+        }
+      }
+    }
+  }
+}
