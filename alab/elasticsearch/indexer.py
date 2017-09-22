@@ -6,8 +6,7 @@ import os
 
 
 class ElasticIndexer:
-    def __init__(self, config_path, source_path, block_size=3000, debug=False):
-
+    def __init__(self, config_path, source_path, block_size=3000, debug=False, recreate_index=True):
         self.config_path = config_path
         with open(self.config_path) as fp:
             self.conf = json.loads(fp.read())
@@ -16,6 +15,7 @@ class ElasticIndexer:
 
         self.block_size = block_size
         self.debug = debug
+        self.recreate_index = recreate_index
 
     def run(self):
         # Get configurations
@@ -26,9 +26,10 @@ class ElasticIndexer:
         meta_template = {'index': {'_index': index, "_type": 'object', '_id': 0}}
 
         # Delete and create index
-        query = self.conf['create_index_query']
-        agent.request({}, ip, port, index, method='delete', operation='', ignore_error=404)
-        agent.request(query, ip, port, index, method='put', operation='', ignore_error=400)
+        if self.recreate_index:
+            query = self.conf['create_index_query']
+            agent.request({}, ip, port, index, method='delete', operation='', ignore_error=404)
+            agent.request(query, ip, port, index, method='put', operation='', ignore_error=400)
 
         # Index
         source_file_path = os.path.join(self.source_path)
