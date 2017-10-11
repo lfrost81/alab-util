@@ -1,0 +1,320 @@
+{
+  "es": {
+    "ip": "52.78.96.74",
+    "port": 9200,
+    "index": "tag.knowledge",
+    "type": "",
+    "behavior_tag_patterns": ["TicketSize", "건수", "횟수", "결제", "여부", "통신비", "이용"],
+    "tf_tags": ["Library방문여부"]
+  },
+  "create_index_query": {
+    "settings": {
+      "index": {
+        "number_of_shards": 5,
+        "number_of_replicas": 1,
+        "mapping": {
+          "total_fields": {
+            "limit": 1000
+          }
+        }
+      },
+      "analysis": {
+        "char_filter": {
+          "special_char_filter": {
+            "type": "pattern_replace",
+            "pattern": "[\\.\\!@#\\$\\%\\^\\&\\*\\(\\)]",
+            "replacement": ""
+          }
+        },
+        "filter": {
+          "like_filter": {
+            "type": "ngram",
+            "min_gram": "2",
+            "max_gram": "7"
+          }
+        },
+        "analyzer": {
+          "like_analyzer": {
+            "char_filter": [
+              "special_char_filter"
+            ],
+            "filter": [
+              "lowercase",
+              "like_filter"
+            ],
+            "type": "custom",
+            "tokenizer": "standard"
+          },
+          "like_search_analyzer": {
+            "type": "custom",
+            "char_filter": [
+              "special_char_filter"
+            ],
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase"
+            ]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "object": {
+        "properties": {
+          "http://www": {
+            "properties": {
+              "w3": {
+                "properties": {
+                  "org/2000/01/rdf-schema#subClassOf": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "org/2000/01/rdf-schema#label": {
+                    "properties": {
+                      "@language": {
+                        "type": "keyword"
+                      },
+                      "@value": {
+                        "type": "keyword",
+                        "fields": {
+                          "analyzed": {
+                            "type": "text",
+                            "analyzer": "like_analyzer",
+                            "search_analyzer": "like_search_analyzer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "org/2000/01/rdf-schema#comment": {
+                    "properties": {
+                      "@language": {
+                        "type": "keyword"
+                      },
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  }
+                }
+              },
+              "hccworld": {
+                "properties": {
+                  "com/tagCategory": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/creationDuration": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/topicCategory": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/creatorDivision": {
+                    "properties": {
+                      "@language": {
+                        "type": "keyword"
+                      },
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/taggingObject": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/columnNumbers": {
+                    "properties": {
+                      "@value": {
+                        "type": "long"
+                      }
+                    }
+                  },
+                  "com/currentPysicalSize": {
+                    "properties": {
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/hasTerm": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/concatenatedColumnDescription": {
+                    "properties": {
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/termDomain": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/altLabel": {
+                    "properties": {
+                      "@language": {
+                        "type": "keyword"
+                      },
+                      "@value": {
+                        "type": "keyword",
+                        "fields": {
+                          "analyzed": {
+                            "type": "text",
+                            "analyzer": "like_analyzer",
+                            "search_analyzer": "like_search_analyzer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "com/narrowerTerm": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/creatorName": {
+                    "properties": {
+                      "@language": {
+                        "type": "keyword"
+                      },
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/tagTableBDP": {
+                    "properties": {
+                      "@language": {
+                        "type": "keyword"
+                      },
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/finalUpdated": {
+                    "properties": {
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/tagNameBDP": {
+                    "properties": {
+                      "@language": {
+                        "type": "keyword"
+                      },
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/creatorTeam": {
+                    "properties": {
+                      "@language": {
+                        "type": "keyword"
+                      },
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/broaderTerm": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/rowCount": {
+                    "properties": {
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/relatedTerm": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/extractSQL": {
+                    "properties": {
+                      "@language": {
+                        "type": "keyword"
+                      },
+                      "@value": {
+                        "type": "keyword"
+                      }
+                    }
+                  },
+                  "com/sourceTable": {
+                    "properties": {
+                      "@id": {
+                        "type": "keyword"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "http://schema": {
+            "properties": {
+              "org/domainIncludes": {
+                "properties": {
+                  "@id": {
+                    "type": "keyword"
+                  }
+                }
+              },
+              "org/rangeIncludes": {
+                "properties": {
+                  "@id": {
+                    "type": "keyword"
+                  }
+                }
+              }
+            }
+          },
+          "@type": {
+            "type": "keyword"
+          },
+          "@id": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,5 @@
 from alab.elasticsearch import agent
 import codecs
-import path
 import json
 import os
 
@@ -39,7 +38,11 @@ class ElasticIndexer:
                 if not line:
                     break
 
-                meta_template['index']['_id'] = json.loads(line)['id']
+                json_dict = json.loads(line)
+                if 'id' in json_dict:
+                    meta_template['index']['_id'] = json.loads(line)['id']
+                else:
+                    meta_template['index']['_id'] = i + 1
 
                 tmp_list.append(json.dumps(meta_template))
                 tmp_list.append(line.replace('\n', ''))
@@ -66,8 +69,10 @@ class ElasticIndexer:
 
 
 def main():
-    indexer = ElasticIndexer('conf/server_config.json',
-                             os.path.join(path.ROOT, 'output', 'customer_201701.txt'))
+    # indexer = ElasticIndexer('conf/server_config.json',
+    #                          os.path.join(path.ROOT, 'output', 'customer_201701.txt'))
+
+    indexer = ElasticIndexer('sample/tag.knowledge.json', 'sample/tag.knowledge.data')
     indexer.run()
 
 
