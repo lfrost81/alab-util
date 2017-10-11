@@ -29,9 +29,10 @@ class Searcher:
 
     def search(self, query, n_doc=10):
         docids = self.get_posting(query)
-        return [self.ir.read_doc(docid) for i, docid in enumerate(docids) if i < n_doc]
+        docs = [self.ir.read_doc(docid) for docid in docids]
+        return sorted(docs, key=lambda doc: -doc[query])[0:n_doc]
 
-    def find_significant_words(self, query, n_doc=1000):
+    def find_significant_words(self, query, n_doc=300):
         docs = self.search(query, n_doc)
         collected = dict()
         for doc in docs:
@@ -71,7 +72,7 @@ class Searcher:
 
 if __name__ == '__main__':
     sc = Searcher()
-    q = '김유신'
+    q = '대통령'
     print(sc.search(q))
     pprint.pprint(sc.find_similar_words(q))
 

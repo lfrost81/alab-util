@@ -226,14 +226,6 @@ class IndexResource:
             with open(Indexer.INVERTED_INDEX_FILE, 'rb') as fp:
                 self.inverted_index = pickle.load(fp)
 
-    def load_all_docs(self):
-        docs = []
-        for i, offset in enumerate(self.offsets):
-            size = self.offsets[i+1] - offset
-            self.forward_index.seek(offset)
-            doc = pickle.loads(self.forward_index.read(size))
-            docs.append(doc)
-
     def read_doc(self, docid):
         offset = self.offsets[docid]
         size = self.offsets[docid+1] - offset
