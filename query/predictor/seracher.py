@@ -1,5 +1,6 @@
 from query.predictor.indexer import IndexResource
 from konlpy.tag import Twitter
+import pprint
 
 
 class DummyMA:
@@ -46,12 +47,12 @@ class Searcher:
 
         return sorted(normalized_collected, key=lambda tup: -tup[1])
 
-    def find_similar_words(self, query, n_candidate=10000, n_word=10):
+    def find_similar_words(self, query, n_candidate=1000, n_word=20, filter_queries=[]):
         query_feature = set(self.get_posting(query))
         query_set = set(self.ma.nouns(query))
         similar_words = []
         for i, (candidate, _) in enumerate(self.find_significant_words(query)):
-            if candidate in query_set:
+            if candidate in query_set or candidate in filter_queries:
                 continue
 
             posting = self.get_posting(candidate)
@@ -63,16 +64,16 @@ class Searcher:
 
         similar_words = sorted(similar_words, key=lambda tup: -tup[1])
         if len(similar_words) > n_word:
-            return similar_words[0:n_word]
+            similar_words = similar_words[0:n_word]
 
         return similar_words
 
 
 if __name__ == '__main__':
     sc = Searcher()
-    q = '아인슈타인 뉴턴'
+    q = '김유신'
     print(sc.search(q))
-    #print(sc.find_similar_words(q))
+    pprint.pprint(sc.find_similar_words(q))
 
     # pprint.pprint(sc.find_similar_words('아인슈타인'))
     # pprint.pprint(sc.find_similar_words('뉴턴'))

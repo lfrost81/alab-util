@@ -75,7 +75,7 @@ class SearchBasedPredictor(Predictor):
     def amnesia(self, query):
         self.query_log.add(query)
 
-        sim_words = self.sc.find_similar_words(query)
+        sim_words = self.sc.find_similar_words(query, filter_queries=self.query_log)
         return sorted(sim_words, key=lambda tup: -tup[1])
 
     def ebbinghaus(self, query):
@@ -86,7 +86,7 @@ class SearchBasedPredictor(Predictor):
             self.interested_words[word] = score * math.exp(-1 / self.ms)
 
         # Query
-        sim_words = self.sc.find_similar_words(query)
+        sim_words = self.sc.find_similar_words(query, filter_queries=self.query_log)
         for word, score in sim_words:
             if word not in self.interested_words:
                 self.interested_words[word] = 0
@@ -158,6 +158,7 @@ class GloveBasedPredictor(Predictor):
         self.interest_vector = None
         self.query_log.clear()
 
+
 #TODO: verifying or remove
 class LdaBasedPredictor(Predictor):
     def __init__(self, memory_strength, use_ma=False):
@@ -181,7 +182,7 @@ class LdaBasedPredictor(Predictor):
 def main():
     topn = 7
     gbp = GloveBasedPredictor(memory_strength=5)
-    sbp = SearchBasedPredictor(memory_strength=3)
+    sbp = SearchBasedPredictor(memory_strength=2)
     qs = ['아인슈타인', '뉴턴', '행성']
     print('Given Queries:', qs)
     print('  Glove Based Prediction(Memorable):')
@@ -237,13 +238,25 @@ def main():
         sbp.clear_interests()
 
     print('\n')
+    bp = gbp
+    prompt = "glove-memorable-diy> "
     while True:
-        q = input("glove-memorable-diy> ")
+        q = input(prompt)
         if q == '!clear':
-            gbp.clear_interests()
+            bp.clear_interests()
             continue
 
-        result = gbp.ebbinghaus(q)[:topn]
+        if q == '!change':
+            bp.clear_interests()
+            if type(bp) is GloveBasedPredictor:
+                bp = sbp
+                prompt = "search-memorable-diy> "
+            else:
+                bp = gbp
+                prompt = "glove-memorable-diy> "
+            continue
+
+        result = bp.ebbinghaus(q)[:topn]
         buf = ['(%s: %.3f)' % (word, score) for word, score in result]
         print('  %s => %s' % (q, ', '.join(buf)))
 
