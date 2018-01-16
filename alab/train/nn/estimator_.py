@@ -1,12 +1,16 @@
 from alab.exception import UnimplementedMethodError
-from alab.data.data_feeder_ import *
+from alab.data import DataFeeder
 from sklearn import metrics
 
 import tensorflow as tf
+import numpy as np
 
 
 class NNEstimator:
-    def __init__(self, verbosity=0):
+    """
+    Abstract Estimator to solve classifying problems
+    """
+    def __init__(self, verbosity):
         self.verbosity = verbosity
 
         self.y_hat = None
@@ -38,7 +42,10 @@ class NNEstimator:
 
 
 class DNNEstimator(NNEstimator):
-    def __init__(self, conf: dict, verbosity=0):
+    """
+    General purpose Deep Neural Network Estimator to solve classifying problems
+    """
+    def __init__(self, conf, verbosity=0):
         NNEstimator.__init__(self, verbosity=verbosity)
 
         # Network configuration
@@ -97,7 +104,7 @@ class DNNEstimator(NNEstimator):
 
             # Set dropouts
             if 'dropout' in layer:
-                node = tf.nn.dropout(node, layer['dropout'])
+                node = tf.nn.dropout(node, keep_prob=layer['dropout'])
 
             hidden_layers.append(node)
 
@@ -107,8 +114,7 @@ class DNNEstimator(NNEstimator):
             self.y_hat = tf.nn.softmax(self.y_hat)
 
         if self.conf['cost_func'] == 'cross_entropy':
-            self.cost = tf.reduce_mean(-tf.reduce_sum(self.y_in * tf.log(self.y_hat),
-                                                      reduction_indices=[1]))
+            self.cost = tf.reduce_mean(-tf.reduce_sum(self.y_in * tf.log(self.y_hat), reduction_indices=[1]))
         elif self.conf['cost_func'] == 'mse':
             self.cost = tf.reduce_mean(tf.square(self.y_in - self.y_hat))
         else:
@@ -166,7 +172,7 @@ class DNNEstimator(NNEstimator):
                 y = feeder.feed('y')
                 _, c = self.sess.run([self.train, self.cost], feed_dict={self.x_in: x, self.y_in: y})
                 if self.verbosity > 1:
-                    print('\tmini batch: cost: %s' % (c))
+                    print('\tmini batch: cost: %s' % c)
             feeder.rewind()
             if self.verbosity > 0:
                 print('epoch: %s, cost: %s' % (e+1, c))

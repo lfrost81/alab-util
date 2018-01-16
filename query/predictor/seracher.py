@@ -32,7 +32,7 @@ class Searcher:
         docs = [self.ir.read_doc(docid) for docid in docids]
         return sorted(docs, key=lambda doc: -doc[query])[0:n_doc]
 
-    def find_significant_words(self, query, n_doc=300):
+    def __collect_words_in_doc(self, query, n_doc=300):
         docs = self.search(query, n_doc)
         collected = dict()
         for doc in docs:
@@ -41,6 +41,10 @@ class Searcher:
                     collected[word] = 0
                 collected[word] += freq
 
+        return collected
+
+    def find_significant_words(self, query, n_doc=300):
+        collected = self.__collect_words_in_doc(query, n_doc)
         normalized_collected = []
         for word, freq in collected.items():
             idf = self.ir.get_idf(word)
@@ -48,22 +52,34 @@ class Searcher:
 
         return sorted(normalized_collected, key=lambda tup: -tup[1])
 
-    def find_similar_words(self, query, n_candidate=1000, n_word=20, filter_queries=[]):
+    def find_similar_words(self, query, n_candidate=1000, n_doc=300, n_word=100, filter_queries=[],
+                           metric='jaccard'):
         query_feature = set(self.get_posting(query))
         query_set = set(self.ma.nouns(query))
         similar_words = []
-        for i, (candidate, _) in enumerate(self.find_significant_words(query)):
+
+        for i, (candidate, _) in enumerate(self.find_significant_words(query, n_doc)):
             if candidate in query_set or candidate in filter_queries:
                 continue
 
             posting = self.get_posting(candidate)
-            intersected = query_feature.intersection(posting)
-            union = query_feature.union(posting)
-            similar_words.append((candidate, len(intersected) / len(union)))
+            if metric == 'jaccard':
+                intersected = query_feature.intersection(posting)
+                union = query_feature.union(posting)
+                word_n_score = (candidate, len(intersected) / len(union))
+            else:
+                intersected = query_feature.intersection(posting)
+                dist = ((len(query_feature) * len(posting)) / (len(intersected) ** 2)) ** 0.5
+                score = 1 / dist
+                word_n_score = (candidate, score)
+
+            similar_words.append(word_n_score)
+
             if i > n_candidate:
                 break
 
         similar_words = sorted(similar_words, key=lambda tup: -tup[1])
+
         if len(similar_words) > n_word:
             similar_words = similar_words[0:n_word]
 

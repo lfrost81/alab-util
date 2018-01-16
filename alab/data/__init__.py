@@ -1,4 +1,4 @@
-from alab.data.data_feeder_ import *
+from alab.data.feeder_ import *
 
 __all__ = [
     'DataFeeder',

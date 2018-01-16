@@ -67,15 +67,18 @@ class Predictor:
 
 
 class SearchBasedPredictor(Predictor):
-    def __init__(self, memory_strength, use_ma=False):
+    def __init__(self, memory_strength, use_ma=False, metric='jaccard'):
         Predictor.__init__(self, memory_strength=memory_strength)
         self.interested_words = {}
         self.sc = Searcher(use_ma=use_ma)
+        self.metric = metric
 
     def amnesia(self, query):
         self.query_log.add(query)
 
-        sim_words = self.sc.find_similar_words(query, filter_queries=self.query_log)
+        sim_words = self.sc.find_similar_words(query, filter_queries=self.query_log,
+                                               metric=self.metric)
+
         return sorted(sim_words, key=lambda tup: -tup[1])
 
     def ebbinghaus(self, query):
@@ -86,13 +89,15 @@ class SearchBasedPredictor(Predictor):
             self.interested_words[word] = score * math.exp(-1 / self.ms)
 
         # Query
-        sim_words = self.sc.find_similar_words(query, filter_queries=self.query_log)
+        sim_words = self.sc.find_similar_words(query, filter_queries=self.query_log,
+                                               metric=self.metric)
         for word, score in sim_words:
             if word not in self.interested_words:
                 self.interested_words[word] = 0
             self.interested_words[word] += score
 
         result = list(self.interested_words.items())
+
         return sorted(result, key=lambda tup: -tup[1])
 
     def clear_interests(self):
@@ -182,7 +187,8 @@ class LdaBasedPredictor(Predictor):
 def main():
     topn = 7
     gbp = GloveBasedPredictor(memory_strength=5)
-    sbp = SearchBasedPredictor(memory_strength=2)
+    sbp_jaccard = SearchBasedPredictor(memory_strength=4, metric='jaccard')
+    sbp_rec_univ = SearchBasedPredictor(memory_strength=2, metric='reciprocal_univ')
     qs = ['아인슈타인', '뉴턴', '행성']
     print('Given Queries:', qs)
     print('  Glove Based Prediction(Memorable):')
@@ -191,25 +197,37 @@ def main():
         buf = ['(%s: %.3f)' % (word, score) for word, score in result]
         print('    %s => %s' % (q, ', '.join(buf)))
     gbp.clear_interests()
+    print('  Search Based(Jaccard) Prediction(Memorable):')
+    for q in qs:
+        result = sbp_jaccard.ebbinghaus(q)[:topn]
+        buf = ['(%s: %.3f)' % (word, score) for word, score in result]
+        print('    %s => %s' % (q, ', '.join(buf)))
+    sbp_jaccard.clear_interests()
+    print('  Search Based(Reciprocal Universal Gravity) Prediction(Memorable):')
+    for q in qs:
+        result = sbp_rec_univ.ebbinghaus(q)[:topn]
+        buf = ['(%s: %.3f)' % (word, score) for word, score in result]
+        print('    %s => %s' % (q, ', '.join(buf)))
+    sbp_rec_univ.clear_interests()
+    print()
     print('  Glove Based Prediction(Amnesia):')
     for q in qs:
         result = gbp.amnesia(q)[:topn]
         buf = ['(%s: %.3f)' % (word, score) for word, score in result]
         print('    %s => %s' % (q, ', '.join(buf)))
     gbp.clear_interests()
-
-    print('  Search Based Prediction(Memorable):')
+    print('  Search Based(Jaccard) Prediction(Amnesia):')
     for q in qs:
-        result = sbp.ebbinghaus(q)[:topn]
+        result = sbp_jaccard.amnesia(q)[:topn]
         buf = ['(%s: %.3f)' % (word, score) for word, score in result]
         print('    %s => %s' % (q, ', '.join(buf)))
-    sbp.clear_interests()
-    print('  Search Based Prediction(Amnesia):')
+    sbp_jaccard.clear_interests()
+    print('  Search Based(Reciprocal Universal Gravity) Prediction(Amnesia):')
     for q in qs:
-        result = sbp.amnesia(q)[:topn]
+        result = sbp_rec_univ.amnesia(q)[:topn]
         buf = ['(%s: %.3f)' % (word, score) for word, score in result]
         print('    %s => %s' % (q, ', '.join(buf)))
-    sbp.clear_interests()
+    sbp_rec_univ.clear_interests()
 
     qs = ['이명박', '노무현', '김대중']
     print()
@@ -219,10 +237,15 @@ def main():
         print('    =>', gbp.ebbinghaus_bot(qs, n_state=10))
         gbp.clear_interests()
 
-    print('  Search Based Talker:')
+    print('  Search Based(Jaccard) Talker:')
     for _ in range(3):
-        print('    =>', sbp.ebbinghaus_bot(qs, n_state=10))
-        sbp.clear_interests()
+        print('    =>', sbp_jaccard.ebbinghaus_bot(qs, n_state=10))
+        sbp_jaccard.clear_interests()
+
+    print('  Search Based(Reciprocal Universal Gravity) Talker:')
+    for _ in range(3):
+        print('    =>', sbp_rec_univ.ebbinghaus_bot(qs, n_state=10))
+        sbp_rec_univ.clear_interests()
 
     qs = ['이명박', '노무현', '김대중', '신라', '김유신']
     print()
@@ -232,28 +255,34 @@ def main():
         print('    =>', gbp.ebbinghaus_bot(qs, n_state=10))
         gbp.clear_interests()
 
-    print('  Search Based Talker:')
+    print('  Search Based(Jaccard) Talker:')
     for _ in range(3):
-        print('    =>', sbp.ebbinghaus_bot(qs, n_state=10))
-        sbp.clear_interests()
+        print('    =>', sbp_jaccard.ebbinghaus_bot(qs, n_state=10))
+        sbp_jaccard.clear_interests()
+
+    print('  Search Based(Reciprocal Universal Gravity) Talker:')
+    for _ in range(3):
+        print('    =>', sbp_rec_univ.ebbinghaus_bot(qs, n_state=10))
+        sbp_rec_univ.clear_interests()
 
     print('\n')
     bp = gbp
     prompt = "glove-memorable-diy> "
     while True:
         q = input(prompt)
-        if q == '!clear':
+        if q.startswith('!'):
             bp.clear_interests()
-            continue
-
-        if q == '!change':
-            bp.clear_interests()
-            if type(bp) is GloveBasedPredictor:
-                bp = sbp
-                prompt = "search-memorable-diy> "
-            else:
+            if q == '!glove':
                 bp = gbp
-                prompt = "glove-memorable-diy> "
+                prompt = 'glove-diy> '
+            elif q == '!jaccard':
+                bp = sbp_jaccard
+                prompt = 'search-jaccard-diy> '
+            elif q == '!univ':
+                bp = sbp_rec_univ
+                prompt = 'search-univ-diy> '
+            elif q == '!exit':
+                break
             continue
 
         result = bp.ebbinghaus(q)[:topn]
