@@ -1,0 +1,7 @@
+tensorflow==1.0.0
+networkx
+konlpy
+gensim
+glove-python
+xxhash
+scikit-learn
